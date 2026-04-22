@@ -25,12 +25,9 @@
 
 pragma solidity ^0.8.19;
 
-import {
-    ERC20Burnable,
-    ERC20
-} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {MockV3Aggregator} from "./MockV3Aggregator.sol";
+import { ERC20Burnable, ERC20 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { MockV3Aggregator } from "./MockV3Aggregator.sol";
 
 /*
  * @title DecentralizedStableCoin
@@ -58,9 +55,7 @@ contract MockMoreDebtDSC is ERC20Burnable, Ownable {
     Related code changes can be viewed in this commit:
     https://github.com/OpenZeppelin/openzeppelin-contracts/commit/13d5e0466a9855e9305119ed383e54fc913fdc60
     */
-    constructor(
-        address _mockAggregator
-    ) ERC20("DecentralizedStableCoin", "DSC") Ownable(msg.sender) {
+    constructor(address _mockAggregator) ERC20("DecentralizedStableCoin", "DSC") Ownable(msg.sender) {
         mockAggregator = _mockAggregator;
     }
 
@@ -77,10 +72,7 @@ contract MockMoreDebtDSC is ERC20Burnable, Ownable {
         super.burn(_amount);
     }
 
-    function mint(
-        address _to,
-        uint256 _amount
-    ) external onlyOwner returns (bool) {
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
         if (_to == address(0)) {
             revert DecentralizedStableCoin__NotZeroAddress();
         }
