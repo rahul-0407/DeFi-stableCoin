@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.19;
 
 import {
     ERC20Burnable,
@@ -19,21 +19,21 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  *
  */
 
-contract DecentralizedStabelCoin is ERC20Burnable, Ownable {
-    error DecentralizedStabelCoin_MustBeMoreThanZero();
-    error DecentralizedStabelCoin_BurnAmountExceedBalance();
-    error DecentralizedStabelCoin_NotZeroAddress();
+contract DecentralizedStableCoin is ERC20Burnable, Ownable {
+    error DecentralizedStableCoin__AmountMustBeMoreThanZero();
+    error DecentralizedStableCoin__BurnAmountExceedsBalance();
+    error DecentralizedStableCoin__NotZeroAddress();
 
-    constructor() ERC20("DecentralizedStabelCoin", "DSC") Ownable(msg.sender) {}
+    constructor() ERC20("DecentralizedStableCoin", "DSC") Ownable(msg.sender) {}
 
     function burn(uint256 _amount) public override onlyOwner {
         uint256 balance = balanceOf(msg.sender);
         if (_amount <= 0) {
-            revert DecentralizedStabelCoin_MustBeMoreThanZero();
+            revert DecentralizedStableCoin__AmountMustBeMoreThanZero();
         }
 
         if (balance < _amount) {
-            revert DecentralizedStabelCoin_BurnAmountExceedBalance();
+            revert DecentralizedStableCoin__BurnAmountExceedsBalance();
         }
 
         super.burn(_amount);
@@ -44,11 +44,11 @@ contract DecentralizedStabelCoin is ERC20Burnable, Ownable {
         uint256 _amount
     ) external onlyOwner returns (bool) {
         if (_to == address(0)) {
-            revert DecentralizedStabelCoin_NotZeroAddress();
+            revert DecentralizedStableCoin__NotZeroAddress();
         }
 
         if (_amount <= 0) {
-            revert DecentralizedStabelCoin_MustBeMoreThanZero();
+            revert DecentralizedStableCoin__AmountMustBeMoreThanZero();
         }
 
         _mint(_to, _amount);

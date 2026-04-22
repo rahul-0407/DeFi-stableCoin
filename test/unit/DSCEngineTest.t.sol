@@ -67,5 +67,26 @@ contract DSCEngineTest is StdCheats, Test {
     }
 
 
+    ///////////////////////
+    // Constructor Tests //
+    ///////////////////////
+    address[] public tokenAddresses;
+    address[] public feedAddresses;
 
+    function testRevertsIfTokenLengthDoesntMatchPriceFeeds() public {
+        tokenAddresses.push(weth);
+        feedAddresses.push(ethUsdPriceFeed);
+        feedAddresses.push(btcUsdPriceFeed);
+
+        vm.expectRevert(DSCEngine.DSCEngine__TokenAddressesAndPriceFeedAddressesAmountsDontMatch.selector);
+        new DSCEngine(tokenAddresses, feedAddresses, address(dsc));
+    }
+
+    function testGetUsdValue() public {
+        uint256 ethAmount = 15e18;
+        // 15e18 ETH * $2000/ETH = $30,000e18
+        uint256 expectedUsd = 30_000e18;
+        uint256 usdValue = dsce.getUsdValue(weth, ethAmount);
+        assertEq(usdValue, expectedUsd);
+    }
 }
