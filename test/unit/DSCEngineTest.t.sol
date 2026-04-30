@@ -104,6 +104,24 @@ contract DSCEngineTest is StdCheats, Test {
     // depositCollateral Tests //
     ///////////////////////////////////////
 
+    function testRevertsIfTransferFromFails() public {
+        address owner = msg.sender;
+        vm.prank(owner);
+        MockFailedTransferFrom mockCollateralToken = new MockFailedTransferFrom();
+        tokenAddresses = [address(mockCollateralToken)];
+        feedAddresses = [ethUsdPriceFeed];
+        // DSCEngine receives the third parameter as dscAddress, not the tokenAddress used as collateral.
+        vm.prank(owner);
+        DSCEngine mockDsce = new DSCEngine(tokenAddresses, feedAddresses, address(dsc));
+        mockCollateralToken.mint(user, amountCollateral);
+        vm.startPrank(user);
+        ERC20Mock(address(mockCollateralToken)).approve(address(mockDsce), amountCollateral);
+        // Act / Assert
+        vm.expectRevert(DSCEngine.DSCEngine__TransferFailed.selector);
+        mockDsce.depositCollateral(address(mockCollateralToken), amountCollateral);
+        vm.stopPrank();
+    }
+
     function testRevertsIfCollateralZero() public {
         vm.startPrank(user);
         ERC20Mock(weth).approve(address(dsce), amountCollateral);
@@ -129,11 +147,32 @@ contract DSCEngineTest is StdCheats, Test {
         _;
     }
 
+    function testCanDepositCollateralWithoutMinting() public depositedCollateral {
+        uint256 userBalance = dsc.balanceOf(user);
+        assertEq(userBalance, 0);
+    }
 
     function testCanDepositedCollateralAndGetAccountInfo() public depositedCollateral {
         (uint256 totalDscMinted, uint256 collateralValueInUsd) = dsce.getAccountInformation(user);
         uint256 expectedDepositedAmount = dsce.getTokenAmountFromUsd(weth, collateralValueInUsd);
         assertEq(totalDscMinted, 0);
         assertEq(expectedDepositedAmount, amountCollateral);
+    }
+
+    ///////////////////////////////////////
+    // depositCollateralAndMintDsc Tests //
+    ///////////////////////////////////////
+
+    function testRevertsIfMintedDscBreaksHealthFactor() public {
+        (, int256 price,,,) = MockV3Aggregator(ethUsdPriceFeed).latestRoundData();
+        amountToMint = (amountCollateral * (uint256(price) * dsce.getAdditionalFeedPrecision())) / dsce.getPrecision();
+        vm.startPrank(user);
+        ERC20Mock(weth).approve(address(dsce), amountCollateral);
+
+        uint256 expectedHealthFactor =
+            dsce.calculateHealthFactor(amountToMint, dsce.getUsdValue(weth, amountCollateral));
+        vm.expectRevert(abi.encodeWithSelector(DSCEngine.DSCEngine__BreaksHealthFactor.selector, expectedHealthFactor));
+        dsce.depositCollateralAndMintDsc(weth, amountCollateral, amountToMint);
+        vm.stopPrank();
     }
 }
